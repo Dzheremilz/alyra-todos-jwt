@@ -1,5 +1,6 @@
 import { useDarkMode } from "../context/DarkModeContext"
 import { useTodosDispatch } from "../context/TodosDispatchContext"
+import { useUser } from "../context/UserContext"
 import { useIsMounted } from "../hooks/useIsMounted"
 
 const AddTodoForm = () => {
@@ -7,6 +8,7 @@ const AddTodoForm = () => {
   const dispatch = useTodosDispatch()
   const darkModeClass = darkMode ? "text-white bg-dark" : ""
   const isMounted = useIsMounted()
+  const { user, userDispatch } = useUser()
 
   const handleFormSubmit = (event) => {
     event.preventDefault()
@@ -16,6 +18,7 @@ const AddTodoForm = () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: "Bearer " + user.access_token,
       },
       body: JSON.stringify({
         text: newTodoText,
@@ -23,6 +26,9 @@ const AddTodoForm = () => {
       }),
     })
       .then((response) => {
+        if (response.status === 401) {
+          userDispatch({type: "LOGOUT"})
+        }
         if (!response.ok) {
           throw new Error(`Something went wrong: ${response.textStatus}`)
         }
